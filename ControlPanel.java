@@ -150,6 +150,11 @@ public class ControlPanel extends Frame
   Label l62 = new Label(null, Label.CENTER);
   Label l63 = new Label(null, Label.CENTER);
 
+  Label segment1 = new Label("S1: ", Label. LEFT);
+  Label segment2 = new Label("S2: ", Label.LEFT);
+  Label segment3 = new Label("S3: ", Label.LEFT);
+  Label segment4 = new Label("S4: ", Label.LEFT);
+
   public ControlPanel() 
   {
     super();
@@ -548,6 +553,15 @@ public class ControlPanel extends Frame
 
     highValueLabel.reshape( 395,225+25,230,15 );
     add( highValueLabel );
+
+    segment1.reshape(285, 240 + 25, 110, 15);
+    add(segment1);
+    segment2.reshape(285, 255 + 25, 110, 15);
+    add(segment2);
+    segment3.reshape(285, 270 + 25, 110, 15);
+    add(segment3);
+    segment4.reshape(285, 285 + 25, 110, 15);
+    add(segment4);
 
     Label virtualOneLabel = new Label( "virtual" , Label.CENTER) ;
     virtualOneLabel.reshape(0,15+25,70,15); 
@@ -953,6 +967,11 @@ public class ControlPanel extends Frame
     lastTouchTimeValueLabel.setText( Integer.toString( page.lastTouchTime ) );
     lowValueLabel.setText(Long.toString( page.low , Kernel.addressradix ) );
     highValueLabel.setText(Long.toString( page.high , Kernel.addressradix ) );
+
+    segment1.setText("S1: " + page.segmentAccesses[0]);
+    segment2.setText("S2: " + page.segmentAccesses[1]);
+    segment3.setText("S3: " + page.segmentAccesses[2]);
+    segment4.setText("S4: " + page.segmentAccesses[3]);
   }
 
   public void setStatus(String status) {

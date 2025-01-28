@@ -437,6 +437,7 @@ public class Kernel extends Thread
         if ( doFileLog )
         {
           printLogFile( "READ " + Long.toString( instruct.addr , addressradix ) + " ... okay" );
+          page.accessSegment(instruct.addr, false); // Actualiza el segmento como referenciado
         }
         if ( doStdoutLog )
         {
@@ -466,6 +467,7 @@ public class Kernel extends Thread
         if ( doFileLog )
         {
           printLogFile( "WRITE " + Long.toString(instruct.addr , addressradix) + " ... okay" );
+          page.accessSegment(instruct.addr, true); // Actualiza el segmento como modificado
         }
         if ( doStdoutLog )
         {
