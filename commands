@@ -1,6 +1,7 @@
 // Enter READ/WRITE commands into this file
 // READ <OPTIONAL number type: bin/hex/oct> <virtual memory address or random>
 // WRITE <OPTIONAL number type: bin/hex/oct> <virtual memory address or random>
-READ hex 0fff 0000
-READ hex 3fff 3000
-
+READ hex 2FFF 4000   // Pagina 00 segmento 3, Pagina 01 segmento 1
+READ hex 4FFF 8000 90900
+WRITE hex CFFF DFFF
+WRITE hex EFFF FFFF

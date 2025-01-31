@@ -242,17 +242,23 @@ public class Kernel extends Thread
           tmp = st.nextToken(); // En esta parte ya hemos leído si es hex, bin o oct.
           if (tmp.startsWith("random")) 
           {
-            instructVector.addElement(new Instruction(command,Common.randomLong( address_limit )));
+            instructVector.addElement(new Instruction(command,                               // Comando  "READ" o "WRITE"
+                                                      Common.randomLong( address_limit ),    // Primer dirección de memoria random
+                                                      Common.randomLong2( address_limit ))); // Segunda dirección de memoria random
+            
+            // instructVector.addElement(new Instruction(command,Common.randomLong( address_limit )));
           } 
           else 
           { 
             if ( tmp.startsWith( "bin" ) )
             {
-              addr = Long.parseLong(st.nextToken(),2);             
+              addr1 = Long.parseLong(st.nextToken(),2);
+              addr2 = Long.parseLong(st.nextToken(),2);            
             }
             else if ( tmp.startsWith( "oct" ) )
             {
-              addr = Long.parseLong(st.nextToken(),8);
+              addr1 = Long.parseLong(st.nextToken(),8);
+              addr2 = Long.parseLong(st.nextToken(),8);
             }
             else if ( tmp.startsWith( "hex" ) )
             {
@@ -263,18 +269,21 @@ public class Kernel extends Thread
             {
               addr = Long.parseLong(tmp);
             }
-            // Validamos que las dos direcciones de memoria estén dentro del rango
+            // Validamos que las primer dirección de memoria sea válida
             if (0 > addr1 || addr1 > address_limit)
             {
               System.out.println("MemoryManagement: " + addr1 + ", Address out of range in " + commands);
               System.exit(-1);
             }
+            // Validamos que la segunda dirección de memoria sea válida
             if (0 > addr2 || addr2 > address_limit)
             {
               System.out.println("MemoryManagement: " + addr2 + ", Address out of range in " + commands);
               System.exit(-1);
             }
-            instructVector.addElement(new Instruction(command,addr1, addr2)); // Agrega la instrucción a la lista de instrucciones, ejemplo: command = "READ", addr = 4095
+            instructVector.addElement(new Instruction(command,   // Comando  "READ" o "WRITE"
+                                                        addr1,   // Primer dirección de memoria
+                                                        addr2)); // Segunda dirección de memoria
           }
         }
       }
@@ -342,11 +351,17 @@ public class Kernel extends Thread
     {
       high = block * virtPageNum;
       Instruction instruct = ( Instruction ) instructVector.elementAt( i );
-      if ( instruct.addr < 0 || instruct.addr > high )
+      if ( instruct.addr1 < 0 || instruct.addr1 > high )
       {
-        System.out.println("MemoryManagement: Instruction (" + instruct.inst + " " + instruct.addr + ") out of bounds.");
+        System.out.println("MemoryManagement: Instruction (" + instruct.inst + " " + instruct.addr1 + ") out of bounds.");
         System.exit(-1);
       }
+      if ( instruct.addr2 < 0 || instruct.addr2 > high )
+      {
+        System.out.println("MemoryManagement: Instruction (" + instruct.inst + " " + instruct.addr2 + ") out of bounds.");
+        System.exit(-1);
+      }
+
     }
   } 
 
@@ -418,7 +433,7 @@ public class Kernel extends Thread
 
     Instruction instruct = ( Instruction ) instructVector.elementAt( runs );
     controlPanel.instructionValueLabel.setText( instruct.inst );
-    controlPanel.addressValueLabel.setText( Long.toString( instruct.addr , addressradix ) );
+    // controlPanel.addressValueLabel.setText( Long.toString( instruct.addr , addressradix ) );
 
     // Pintamos las dos direcciones en controlPanel
     controlPanel.address1ValueLabel.setText( Long.toString( instruct.addr1 , addressradix ) );
@@ -426,26 +441,34 @@ public class Kernel extends Thread
 
     System.out.println("Instruction: " + instruct.inst + " " + instruct.addr1 + " " + instruct.addr2);
 
-
-    getPage( Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) );
+    // Dirección 1
+    // getPage( Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) );
+    getPage( Virtual2Physical.pageNum( instruct.addr1 , virtPageNum , block ) );
     if ( controlPanel.pageFaultValueLabel.getText() == "YES" ) 
     {
       controlPanel.pageFaultValueLabel.setText( "NO" );
     }
+
+    // Instrucción READ
+
     if ( instruct.inst.startsWith( "READ" ) ) 
     {
-      Page page = ( Page ) memVector.elementAt( Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) );
+      // Page page = ( Page ) memVector.elementAt( Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) );
+      Page page = ( Page ) memVector.elementAt( Virtual2Physical.pageNum( instruct.addr1 , virtPageNum , block ) );
       if ( page.physical == -1 ) 
       {
         if ( doFileLog )
         {
-          printLogFile( "READ " + Long.toString(instruct.addr , addressradix) + " ... page fault" );
+          // printLogFile( "READ " + Long.toString(instruct.addr , addressradix) + " ... page fault" );
+          printLogFile( "READ " + Long.toString(instruct.addr1 , addressradix) + " ... page fault" );
         }
         if ( doStdoutLog )
         {
-          System.out.println( "READ " + Long.toString(instruct.addr , addressradix) + " ... page fault" );
+          // System.out.println( "READ " + Long.toString(instruct.addr , addressradix) + " ... page fault" );
+          System.out.println( "READ " + Long.toString(instruct.addr1 , addressradix) + " ... page fault" );
         }
-        PageFault.replacePage( memVector , virtPageNum , Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) , controlPanel );
+        // PageFault.replacePage( memVector , virtPageNum , Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) , controlPanel );
+        PageFault.replacePage( memVector , virtPageNum , Virtual2Physical.pageNum( instruct.addr1 , virtPageNum , block ) , controlPanel );
         controlPanel.pageFaultValueLabel.setText( "YES" );
       } 
       else 
@@ -454,29 +477,39 @@ public class Kernel extends Thread
         page.lastTouchTime = 0;   
         if ( doFileLog )
         {
-          printLogFile( "READ " + Long.toString( instruct.addr , addressradix ) + " ... okay" );
-          page.accessSegment(instruct.addr, false); // Actualiza el segmento como referenciado
+          // printLogFile( "READ " + Long.toString( instruct.addr , addressradix ) + " ... okay" );
+          printLogFile( "READ " + Long.toString( instruct.addr1 , addressradix ) + " ... okay" );
+          // page.accessSegment(instruct.addr, false); // Actualiza el segmento como referenciado
+          page.accessSegment(instruct.addr1, false); // Actualiza el segmento como referenciado
         }
         if ( doStdoutLog )
         {
-          System.out.println( "READ " + Long.toString( instruct.addr , addressradix ) + " ... okay" );
+          // System.out.println( "READ " + Long.toString( instruct.addr , addressradix ) + " ... okay" );
+          System.out.println( "READ " + Long.toString( instruct.addr1 , addressradix ) + " ... okay" );
         }
       }
     }
+
+    // Instrucción WRITE
     if ( instruct.inst.startsWith( "WRITE" ) ) 
     {
-      Page page = ( Page ) memVector.elementAt( Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) );
+      // Page page = ( Page ) memVector.elementAt( Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) );
+      Page page = ( Page ) memVector.elementAt( Virtual2Physical.pageNum( instruct.addr1 , virtPageNum , block ) );
       if ( page.physical == -1 ) 
       {
         if ( doFileLog )
         {
-          printLogFile( "WRITE " + Long.toString(instruct.addr , addressradix) + " ... page fault" );
+          // printLogFile( "WRITE " + Long.toString(instruct.addr , addressradix) + " ... page fault" );
+          printLogFile( "WRITE " + Long.toString(instruct.addr1 , addressradix) + " ... page fault" );
         }
         if ( doStdoutLog )
         {
-           System.out.println( "WRITE " + Long.toString(instruct.addr , addressradix) + " ... page fault" );
+          // System.out.println( "WRITE " + Long.toString(instruct.addr , addressradix) + " ... page fault" );
+          System.out.println( "WRITE " + Long.toString(instruct.addr1 , addressradix) + " ... page fault" );
         }
-        PageFault.replacePage( memVector , virtPageNum , Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) , controlPanel );          controlPanel.pageFaultValueLabel.setText( "YES" );
+        // PageFault.replacePage( memVector , virtPageNum , Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) , controlPanel );      controlPanel.pageFaultValueLabel.setText( "YES" );
+        PageFault.replacePage( memVector , virtPageNum , Virtual2Physical.pageNum( instruct.addr1 , virtPageNum , block ) , controlPanel );
+        controlPanel.pageFaultValueLabel.setText( "YES" );
       } 
       else 
       {
@@ -484,15 +517,110 @@ public class Kernel extends Thread
         page.lastTouchTime = 0;
         if ( doFileLog )
         {
-          printLogFile( "WRITE " + Long.toString(instruct.addr , addressradix) + " ... okay" );
-          page.accessSegment(instruct.addr, true); // Actualiza el segmento como modificado
+          // printLogFile( "WRITE " + Long.toString(instruct.addr , addressradix) + " ... okay" );
+          printLogFile( "WRITE " + Long.toString(instruct.addr1 , addressradix) + " ... okay" );
+          // page.accessSegment(instruct.addr, true); // Actualiza el segmento como modificado
+          page.accessSegment(instruct.addr1, true); // Actualiza el segmento como modificado
         }
         if ( doStdoutLog )
         {
-          System.out.println( "WRITE " + Long.toString(instruct.addr , addressradix) + " ... okay" );
+          // System.out.println( "WRITE " + Long.toString(instruct.addr , addressradix) + " ... okay" );
+          System.out.println( "WRITE " + Long.toString(instruct.addr1 , addressradix) + " ... okay" );
         }
       }
     }
+
+    // Dirección 2
+    // getPage( Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) );
+    getPage( Virtual2Physical.pageNum( instruct.addr2 , virtPageNum , block ) );
+    if ( controlPanel.pageFaultValueLabel.getText() == "YES" ) 
+    {
+      controlPanel.pageFaultValueLabel.setText( "NO" );
+    }
+
+    // Instrucción READ
+
+    if ( instruct.inst.startsWith( "READ" ) ) 
+    {
+      // Page page = ( Page ) memVector.elementAt( Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) );
+      Page page = ( Page ) memVector.elementAt( Virtual2Physical.pageNum( instruct.addr2 , virtPageNum , block ) );
+      if ( page.physical == -1 ) 
+      {
+        if ( doFileLog )
+        {
+          // printLogFile( "READ " + Long.toString(instruct.addr , addressradix) + " ... page fault" );
+          printLogFile( "READ " + Long.toString(instruct.addr2 , addressradix) + " ... page fault" );
+        }
+        if ( doStdoutLog )
+        {
+          // System.out.println( "READ " + Long.toString(instruct.addr , addressradix) + " ... page fault" );
+          System.out.println( "READ " + Long.toString(instruct.addr2 , addressradix) + " ... page fault" );
+        }
+        // PageFault.replacePage( memVector , virtPageNum , Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) , controlPanel );
+        PageFault.replacePage( memVector , virtPageNum , Virtual2Physical.pageNum( instruct.addr2 , virtPageNum , block ) , controlPanel );
+        controlPanel.pageFaultValueLabel.setText( "YES" );
+      } 
+      else 
+      {
+        page.R = 1;
+        page.lastTouchTime = 0;   
+        if ( doFileLog )
+        {
+          // printLogFile( "READ " + Long.toString( instruct.addr , addressradix ) + " ... okay" );
+          printLogFile( "READ " + Long.toString( instruct.addr2 , addressradix ) + " ... okay" );
+          // page.accessSegment(instruct.addr, false); // Actualiza el segmento como referenciado
+          page.accessSegment(instruct.addr2, false); // Actualiza el segmento como referenciado
+        }
+        if ( doStdoutLog )
+        {
+          // System.out.println( "READ " + Long.toString( instruct.addr , addressradix ) + " ... okay" );
+          System.out.println( "READ " + Long.toString( instruct.addr2 , addressradix ) + " ... okay" );
+        }
+      }
+    }
+
+    // Instrucción WRITE
+    if ( instruct.inst.startsWith( "WRITE" ) ) 
+    {
+      // Page page = ( Page ) memVector.elementAt( Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) );
+      Page page = ( Page ) memVector.elementAt( Virtual2Physical.pageNum( instruct.addr2 , virtPageNum , block ) );
+      if ( page.physical == -1 ) 
+      {
+        if ( doFileLog )
+        {
+          // printLogFile( "WRITE " + Long.toString(instruct.addr , addressradix) + " ... page fault" );
+          printLogFile( "WRITE " + Long.toString(instruct.addr2 , addressradix) + " ... page fault" );
+        }
+        if ( doStdoutLog )
+        {
+          // System.out.println( "WRITE " + Long.toString(instruct.addr , addressradix) + " ... page fault" );
+          System.out.println( "WRITE " + Long.toString(instruct.addr2 , addressradix) + " ... page fault" );
+        }
+        // PageFault.replacePage( memVector , virtPageNum , Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) , controlPanel );      controlPanel.pageFaultValueLabel.setText( "YES" );
+        PageFault.replacePage( memVector , virtPageNum , Virtual2Physical.pageNum( instruct.addr2 , virtPageNum , block ) , controlPanel );
+        controlPanel.pageFaultValueLabel.setText( "YES" );
+      } 
+      else 
+      {
+        page.M = 1;
+        page.lastTouchTime = 0;
+        if ( doFileLog )
+        {
+          // printLogFile( "WRITE " + Long.toString(instruct.addr , addressradix) + " ... okay" );
+          printLogFile( "WRITE " + Long.toString(instruct.addr2 , addressradix) + " ... okay" );
+          // page.accessSegment(instruct.addr, true); // Actualiza el segmento como modificado
+          page.accessSegment(instruct.addr2, true); // Actualiza el segmento como modificado
+        }
+        if ( doStdoutLog )
+        {
+          // System.out.println( "WRITE " + Long.toString(instruct.addr , addressradix) + " ... okay" );
+          System.out.println( "WRITE " + Long.toString(instruct.addr2 , addressradix) + " ... okay" );
+        }
+      }
+    }
+
+    // Termina Dirección 2
+
     for ( i = 0; i < virtPageNum; i++ ) 
     {
       Page page = ( Page ) memVector.elementAt( i );
@@ -516,7 +644,12 @@ public class Kernel extends Thread
     controlPanel.statusValueLabel.setText( "STOP" ) ;
     controlPanel.timeValueLabel.setText( "0" ) ;
     controlPanel.instructionValueLabel.setText( "NONE" ) ;
-    controlPanel.addressValueLabel.setText( "NULL" ) ;
+    // controlPanel.addressValueLabel.setText( "NULL" ) ;
+
+    controlPanel.address1ValueLabel.setText( "NULL" ) ;
+    controlPanel.address2ValueLabel.setText( "NULL" ) ;
+
+
     controlPanel.pageFaultValueLabel.setText( "NO" ) ;
     controlPanel.virtualPageValueLabel.setText( "x" ) ;
     controlPanel.physicalPageValueLabel.setText( "0" ) ;

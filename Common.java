@@ -54,5 +54,20 @@ public class Common {
     }
     return i;
   }
+
+  public static long randomLong2( long MAX ) 
+  {
+    long i = -1;
+
+    java.util.Random generator = new
+    java.util.Random(System.nanoTime());
+    while (i > MAX || i < 0)
+    {
+      int intOne = generator.nextInt();
+      int intTwo = generator.nextInt();
+      i = (long) intOne + intTwo;
+    }
+    return i;
+  }
 }
 
