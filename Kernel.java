@@ -2,6 +2,7 @@ import java.lang.Thread;
 import java.io.*;
 import java.util.*;
 
+@SuppressWarnings("all")
 public class Kernel extends Thread
 {
   // The number of virtual pages must be fixed at 63 due to
@@ -46,6 +47,8 @@ public class Kernel extends Thread
     long high = 0;
     long low = 0;
     long addr = 0;
+    long addr1 = 0; // La primer dirección de memoria
+    long addr2 = 0; // La segunda dirección de memoria
     long address_limit = (block * virtPageNum+1)-1;
   
     if ( config != null )
@@ -236,7 +239,7 @@ public class Kernel extends Thread
           }
           StringTokenizer st = new StringTokenizer(line);
           tmp = st.nextToken();
-          tmp = st.nextToken();
+          tmp = st.nextToken(); // En esta parte ya hemos leído si es hex, bin o oct.
           if (tmp.startsWith("random")) 
           {
             instructVector.addElement(new Instruction(command,Common.randomLong( address_limit )));
@@ -253,18 +256,25 @@ public class Kernel extends Thread
             }
             else if ( tmp.startsWith( "hex" ) )
             {
-              addr = Long.parseLong(st.nextToken(),16);
+              addr1 = Long.parseLong(st.nextToken(),16);
+              addr2 = Long.parseLong(st.nextToken(),16);
             }
             else
             {
               addr = Long.parseLong(tmp);
             }
-            if (0 > addr || addr > address_limit)
+            // Validamos que las dos direcciones de memoria estén dentro del rango
+            if (0 > addr1 || addr1 > address_limit)
             {
-              System.out.println("MemoryManagement: " + addr + ", Address out of range in " + commands);
+              System.out.println("MemoryManagement: " + addr1 + ", Address out of range in " + commands);
               System.exit(-1);
             }
-            instructVector.addElement(new Instruction(command,addr));
+            if (0 > addr2 || addr2 > address_limit)
+            {
+              System.out.println("MemoryManagement: " + addr2 + ", Address out of range in " + commands);
+              System.exit(-1);
+            }
+            instructVector.addElement(new Instruction(command,addr1, addr2)); // Agrega la instrucción a la lista de instrucciones, ejemplo: command = "READ", addr = 4095
           }
         }
       }
@@ -409,6 +419,14 @@ public class Kernel extends Thread
     Instruction instruct = ( Instruction ) instructVector.elementAt( runs );
     controlPanel.instructionValueLabel.setText( instruct.inst );
     controlPanel.addressValueLabel.setText( Long.toString( instruct.addr , addressradix ) );
+
+    // Pintamos las dos direcciones en controlPanel
+    controlPanel.address1ValueLabel.setText( Long.toString( instruct.addr1 , addressradix ) );
+    controlPanel.address2ValueLabel.setText( Long.toString( instruct.addr2 , addressradix ) );
+
+    System.out.println("Instruction: " + instruct.inst + " " + instruct.addr1 + " " + instruct.addr2);
+
+
     getPage( Virtual2Physical.pageNum( instruct.addr , virtPageNum , block ) );
     if ( controlPanel.pageFaultValueLabel.getText() == "YES" ) 
     {

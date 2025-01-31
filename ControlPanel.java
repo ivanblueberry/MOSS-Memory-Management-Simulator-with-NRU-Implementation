@@ -76,6 +76,11 @@ public class ControlPanel extends Frame
   Label timeValueLabel = new Label("0" , Label.LEFT) ;
   Label instructionValueLabel = new Label("NONE" , Label.LEFT) ;
   Label addressValueLabel = new Label("NULL" , Label.LEFT) ;
+
+  Label address1ValueLabel = new Label("NULL" , Label.LEFT) ;
+  Label address2ValueLabel = new Label("NULL" , Label.LEFT) ;
+
+
   Label pageFaultValueLabel = new Label("NO" , Label.LEFT) ;
   Label virtualPageValueLabel = new Label("x" , Label.LEFT) ;
   Label physicalPageValueLabel = new Label("0" , Label.LEFT) ;
@@ -527,6 +532,26 @@ public class ControlPanel extends Frame
     addressValueLabel.reshape(385,60+25,230,15);
     add( addressValueLabel );
 
+    /*
+    Label addressLabel = new Label("address: " , Label.LEFT) ;
+    addressLabel.reshape(285,60+25,85,15);
+    add(addressLabel);
+
+    Label address1Label = new Label("address 1: " , Label.LEFT) ;
+    address1Label.reshape(300,330+25,85,15);
+    add(address1Label);
+
+    Label address2Label = new Label("address 2: " , Label.LEFT) ;
+    address2Label.reshape(285,345+25,85,15);
+    add(address2Label);
+     */
+
+    address1ValueLabel.reshape(385,330+25,230,15);
+    add( address1ValueLabel );
+
+    address2ValueLabel.reshape(385,345+25,230,15);
+    add( address2ValueLabel );
+
     pageFaultValueLabel.reshape( 385,90+25,100,15 );
     add( pageFaultValueLabel );
 
@@ -595,6 +620,14 @@ public class ControlPanel extends Frame
     addressLabel.reshape(285,60+25,85,15);
     add(addressLabel);
 
+    Label address1Label = new Label("address 1: " , Label.LEFT) ;
+    address1Label.reshape(300,330+25,85,15);
+    add(address1Label);
+
+    Label address2Label = new Label("address 2: " , Label.LEFT) ;
+    address2Label.reshape(285,345+25,85,15);
+    add(address2Label);
+  
     Label pageFaultLabel = new Label("page fault: " , Label.LEFT) ;
     pageFaultLabel.reshape(285,90+25,100,15);
     add(pageFaultLabel);
