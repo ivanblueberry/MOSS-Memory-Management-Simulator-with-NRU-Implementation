@@ -1,88 +1,81 @@
-/* It is in this file, specifically the replacePage function that will
-   be called by MemoryManagement when there is a page fault.  The 
-   users of this program should rewrite PageFault to implement the 
-   page replacement algorithm.
-*/
-
-  // This PageFault file is an example of the FIFO Page Replacement 
-  // Algorithm as described in the Memory Management section.
-
 import java.util.*;
 
 public class PageFault {
 
   /**
-   * The page replacement algorithm for the memory management sumulator.
+   * The page replacement algorithm for the memory management simulator.
    * This method gets called whenever a page needs to be replaced.
    * <p>
-   * The page replacement algorithm included with the simulator is 
-   * FIFO (first-in first-out).  A while or for loop should be used 
-   * to search through the current memory contents for a canidate 
-   * replacement page.  In the case of FIFO the while loop is used 
-   * to find the proper page while making sure that virtPageNum is 
-   * not exceeded.
-   * <pre>
-   *   Page page = ( Page ) mem.elementAt( oldestPage )
-   * </pre>
-   * This line brings the contents of the Page at oldestPage (a 
-   * specified integer) from the mem vector into the page object.  
-   * Next recall the contents of the target page, replacePageNum.  
-   * Set the physical memory address of the page to be added equal 
-   * to the page to be removed.
-   * <pre>
-   *   controlPanel.removePhysicalPage( oldestPage )
-   * </pre>
-   * Once a page is removed from memory it must also be reflected 
-   * graphically.  This line does so by removing the physical page 
-   * at the oldestPage value.  The page which will be added into 
-   * memory must also be displayed through the addPhysicalPage 
-   * function call.  One must also remember to reset the values of 
-   * the page which has just been removed from memory.
+   * The page replacement algorithm implemented here is the NRU (Not Recently Used) algorithm. 
+   * NRU classifies pages into four categories based on the values of the reference bit (R) and 
+   * the modification bit (M):
+   * <ul>
+   *   <li>Class 0: R = 0, M = 0 (not recently used and not modified, highest priority for replacement).</li>
+   *   <li>Class 1: R = 0, M = 1 (not recently used but modified).</li>
+   *   <li>Class 2: R = 1, M = 0 (recently used but not modified).</li>
+   *   <li>Class 3: R = 1, M = 1 (recently used and modified, lowest priority for replacement).</li>
+   * </ul>
+   * The algorithm selects a page for replacement by prioritizing the lowest class number (0 being the highest priority).
+   * If there are multiple pages in the same class, the first one found is replaced.
+   * <p>
+   * This method modifies the memory vector to reflect the changes and updates the graphical interface to
+   * show the replacement process.
    *
-   * @param mem is the vector which contains the contents of the pages 
-   *   in memory being simulated.  mem should be searched to find the 
-   *   proper page to remove, and modified to reflect any changes.  
-   * @param virtPageNum is the number of virtual pages in the 
-   *   simulator (set in Kernel.java).  
-   * @param replacePageNum is the requested page which caused the 
-   *   page fault.  
-   * @param controlPanel represents the graphical element of the 
-   *   simulator, and allows one to modify the current display.
+   * @param mem           A vector containing the pages currently in memory. Each element is an instance of the Page class.
+   * @param virtPageNum   The total number of virtual pages in the simulator (set in Kernel.java).
+   * @param replacePageNum The virtual page number that caused the page fault and needs to be loaded into memory.
+   * @param controlPanel  The graphical interface for the simulator, used to update the display.
    */
-  public static void replacePage ( Vector mem , int virtPageNum , int replacePageNum , ControlPanel controlPanel ) 
-  {
-    int count = 0;
-    int oldestPage = -1;
-    int oldestTime = 0;
-    int firstPage = -1;
-    int map_count = 0;
-    boolean mapped = false;
+  public static void replacePage(Vector mem, int virtPageNum, int replacePageNum, ControlPanel controlPanel) {
+    // Lists to classify pages into the four NRU categories
+    ArrayList<Integer> class0 = new ArrayList<>();
+    ArrayList<Integer> class1 = new ArrayList<>();
+    ArrayList<Integer> class2 = new ArrayList<>();
+    ArrayList<Integer> class3 = new ArrayList<>();
 
-    while ( ! (mapped) || count != virtPageNum ) {
-      Page page = ( Page ) mem.elementAt( count );
-      if ( page.physical != -1 ) {
-        if (firstPage == -1) {
-          firstPage = count;
+    // Classify pages based on their R (reference) and M (modification) bits
+    for (int i = 0; i < virtPageNum; i++) {
+        Page page = (Page) mem.elementAt(i);
+        if (page.physical != -1) { // Only consider pages currently in physical memory
+            if (page.R == 0 && page.M == 0) {
+                class0.add(i); // Class 0: Not recently used, not modified
+            } else if (page.R == 0 && page.M == 1) {
+                class1.add(i); // Class 1: Not recently used, but modified
+            } else if (page.R == 1 && page.M == 0) {
+                class2.add(i); // Class 2: Recently used, not modified
+            } else {
+                class3.add(i); // Class 3: Recently used and modified
+            }
         }
-        if (page.inMemTime > oldestTime) {
-          oldestTime = page.inMemTime;
-          oldestPage = count;
-          mapped = true;
-        }
-      }
-      count++;
-      if ( count == virtPageNum ) {
-        mapped = true;
-      }
     }
-    if (oldestPage == -1) {
-      oldestPage = firstPage;
+
+    // Select a page to replace based on NRU priority
+    int pageToReplace = -1;
+    if (!class0.isEmpty()) {
+        pageToReplace = class0.get(0); // Replace a page from Class 0 (highest priority)
+    } else if (!class1.isEmpty()) {
+        pageToReplace = class1.get(0); // Replace a page from Class 1
+    } else if (!class2.isEmpty()) {
+        pageToReplace = class2.get(0); // Replace a page from Class 2
+    } else if (!class3.isEmpty()) {
+        pageToReplace = class3.get(0); // Replace a page from Class 3 (lowest priority)
     }
-    Page page = ( Page ) mem.elementAt( oldestPage );
-    Page nextpage = ( Page ) mem.elementAt( replacePageNum );
-    controlPanel.removePhysicalPage( oldestPage );
-    nextpage.physical = page.physical;
-    controlPanel.addPhysicalPage( nextpage.physical , replacePageNum );
+
+    // Fallback: If no page was selected (unlikely), replace the first page
+    if (pageToReplace == -1) {
+        pageToReplace = 0;
+    }
+
+    // Perform the page replacement
+    Page page = (Page) mem.elementAt(pageToReplace);
+    Page nextPage = (Page) mem.elementAt(replacePageNum);
+
+    // Update the graphical interface to reflect the replacement
+    controlPanel.removePhysicalPage(pageToReplace);
+    nextPage.physical = page.physical;
+    controlPanel.addPhysicalPage(nextPage.physical, replacePageNum);
+
+    // Reset the attributes of the replaced page
     page.inMemTime = 0;
     page.lastTouchTime = 0;
     page.R = 0;

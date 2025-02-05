@@ -1,5 +1,15 @@
 // Enter READ/WRITE commands into this file
 // READ <OPTIONAL number type: bin/hex/oct> <virtual memory address or random>
 // WRITE <OPTIONAL number type: bin/hex/oct> <virtual memory address or random>
-WRITE hex A0000 A3FFF // Pagina 40; Segmento 1 y 4
-READ hex F6FFF 85000 // Pagina 33 Segmento 2; Pagina 61 Segmento 3
+
+// Escritura y lectura de direcciones de memoria por segmento
+// WRITE hex 3FFF 2000  // Página 00: Segmento 3, 4
+// READ  hex 7FFF 4000  // Página 01: Segmento 1, 4
+// WRITE hex BFFF F000  // Página 02: Segmento 4; Pagina 3: Segmento 4
+
+// Escribe en una pagina que no esta cargada para provocar fallos
+READ  hex 84FFF 84000 // Página 33: operación READ  para generar un fallo de pagina
+READ  hex 88FFF 88000 // Página 34: operación READ  para generar otro fallo de pagina
+READ  hex 8CFFF 8C000 // Página 35: operación READ  para generar otro fallo de pagina
+READ  hex 90FFF 90000 // Página 36: operación READ  para generar otro fallo de pagina
+READ  hex 94FFF 94000 // Página 37: operación READ  ...

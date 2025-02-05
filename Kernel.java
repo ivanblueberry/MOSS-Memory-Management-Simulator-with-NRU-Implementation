@@ -642,7 +642,9 @@ public class Kernel extends Thread
       Page page = ( Page ) memVector.elementAt( i );
       if ( page.R == 1 && page.lastTouchTime == 10 ) 
       {
-        page.R = 0;
+        // Se comentó esta línea para realizar pruebas en PageFault.java
+        // Favor de descomentarla para que el programa funcione correctamente
+        // page.R = 0;
       }
       if ( page.physical != -1 ) 
       {
