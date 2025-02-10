@@ -26,13 +26,41 @@ Cuando ocurre un fallo de página, el algoritmo reemplaza una página de la clas
 - **`commands`:** Archivo con operaciones de memoria predefinidas (READ/WRITE) para probar el simulador.
 - **`tracefile`:** Archivo de registro que muestra el resultado de las operaciones de memoria durante la simulación.
 
-## Cómo Compilar
+## Ejecución del Simulador (Con Scripts)
+Para poder ejecutar el simulador puede optar por la ejecución por medio de scripts 
+
+### Para Sistemas Unix/Linux (`run.sh`):
+```bash
+./run.sh
+```
+*Nota:* Debe otorgar permisos de ejecución primero:
+```bash
+chmod +x run.sh
+```
+
+### Para Windows (`run.bat`):
+Solo haga doble click en el archivo:
+```bat
+run.bat
+```
+
+Ambos scripts realizan:
+1. Compilación automática de los archivos Java (con supresión de advertencias).
+2. Ejecución del simulador con la configuración predeterminada (`commands` y `memory.conf`).
+3. *(Solo `run.bat`)* Pausa la terminal al finalizar para visualizar la salida.
+
+---
+
+## Cómo Compilar (Manualmente)
 Para compilar todos los archivos Java:
 ```bash
 javac -nowarn *.java
 ```
 
-## Cómo Ejecutar
+---
+
+
+## Cómo Ejecutar (Manualmente)
 Para ejecutar el simulador:
 ```bash
 java MemoryManagement commands memory.conf

@@ -28,17 +28,45 @@ When a page fault occurs, the algorithm replaces a page from the class with the 
 - **`commands`:** File with predefined memory operations (READ/WRITE) to test the simulator.
 - **`tracefile`:** Log file showing the result of memory operations during the simulation.
 
-## How to Compile
-To compile all Java files:
+## Running the Simulator (With Scripts)  
+To run the simulator, you can choose to execute it using scripts.  
+
+### For Unix/Linux Systems (`run.sh`):  
+```bash
+./run.sh
+```  
+*Note:* You must first grant execution permissions:  
+```bash
+chmod +x run.sh
+```
+
+### For Windows (`run.bat`):  
+Simply double-click the file:  
+```bat
+run.bat
+```
+
+Both scripts perform the following actions:  
+1. Automatically compile Java files (suppressing warnings).  
+2. Run the simulator with the default configuration (`commands` and `memory.conf`).  
+3. *(Only `run.bat`)* Pause the terminal at the end to view the output.  
+
+---
+
+## How to Compile (Manually)  
+To compile all Java files:  
 ```bash
 javac -nowarn *.java
 ```
 
-## How to Run
-To run the simulator:
+---
+
+## How to Run (Manually)  
+To execute the simulator:  
 ```bash
 java MemoryManagement commands memory.conf
 ```
+
 
 ### Example Configuration (`memory.conf`)
 - Pages 0 to 8 are marked as referenced and modified (R = 1, M = 1) to simulate occupied pages.
